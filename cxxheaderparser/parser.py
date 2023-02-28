@@ -409,12 +409,24 @@ class CxxParser:
         tok = self._next_token_must_be("NAME", "{")
         if tok.type != "{":
             while True:
-                names.append(tok.value)
-                tok = self._next_token_must_be("DBL_COLON", "{")
-                if tok.type == "{":
-                    break
+                tok = self._next_token_must_be("DBL_COLON", "{", "=")
+                if tok.type == "=":
+                    # it's an alias... just eat the alias definition and return 
+                    tok = self._next_token_must_be("NAME")
+                    while True:
+                        tok = self._next_token_must_be("DBL_COLON", ";")
+                        if tok.type == "DBL_COLON":
+                            tok = self._next_token_must_be("NAME")
+                        if tok.type == ";":
+                            return
+                
+                else:
+                    names.append(tok.value)
+                    
+                    if tok.type == "{":
+                        break
 
-                tok = self._next_token_must_be("NAME")
+                    tok = self._next_token_must_be("NAME")
 
         if inline and len(names) > 1:
             raise CxxParseError("a nested namespace definition cannot be inline")
